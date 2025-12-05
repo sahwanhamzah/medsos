@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategi Konten Medsos AI (Organik)</title>
+    <!-- Memuat Tailwind CSS untuk styling modern -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Mengatur tema dan font default -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary-blue': '#1DA1F2', // Biru media sosial yang cerah
+                        'secondary-dark': '#1C2938',
+                        'accent-green': '#17BF63',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Gaya kustom untuk memastikan estetika dan responsivitas */
+        body {
+            background-color: #f7f9fb;
+            font-family: 'Inter', sans-serif;
+        }
+        .card {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 0 10px -5px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-2px);
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #fff;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #scriptLoadingSpinner {
+            border-top: 4px solid #1DA1F2; /* Menggunakan warna primary-blue untuk loading script */
+            width: 20px;
+            height: 20px;
+        }
+        #hashtagLoadingSpinner {
+            border-top: 4px solid #F97316; /* Warna oranye untuk loading hashtag */
+            width: 20px;
+            height: 20px;
+        }
+        #trendsLoadingSpinner {
+            border-top: 4px solid #1C2938; /* Warna dark untuk loading trends */
+            width: 20px;
+            height: 20px;
+        }
+        .saved-item {
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .saved-item:hover {
+            background-color: #eef2ff;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 flex items-start justify-center">
+
+    <div class="w-full max-w-4xl mt-8">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-extrabold text-secondary-dark mb-2">
+                Strategi Konten Media Sosial Berbasis AI
+            </h1>
+            <p class="text-lg text-gray-600">
+                Tingkatkan pengikut Anda secara organik dengan ide konten yang relevan dan jadwal posting yang optimal.
+            </p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="bg-white card p-6 md:p-8 rounded-xl mb-8">
+            <h2 class="text-2xl font-semibold text-primary-blue mb-4">Rencanakan Konten Anda</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="topicInput" class="block text-sm font-medium text-gray-700 mb-1">Topik Utama Akun (Misalnya: resep makanan sehat, tips investasi, ulasan game)</label>
+                    <input type="text" id="topicInput" placeholder="Masukkan topik akun Anda" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue transition duration-150" required>
+                </div>
+                
+                <div>
+                    <label for="platformSelect" class="block text-sm font-medium text-gray-700 mb-1">Platform Target</label>
+                    <select id="platformSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue transition duration-150">
+                        <option value="Instagram">Instagram (Reels/Stories/Feeds)</option>
+                        <option value="TikTok">TikTok (Video Pendek)</option>
+                        <option value="YouTube Shorts">YouTube Shorts</option>
+                        <option value="X (Twitter)">X (Twitter)</option>
+                    </select>
+                </div>
+                
+                <!-- START NEW TRENDING CONTENT SECTION -->
+                <div class="border-t pt-4 mt-4">
+                    <button id="getTrendsBtn" onclick="getGeneralTrends()" class="w-full flex items-center justify-center p-3 text-white font-bold bg-secondary-dark hover:bg-gray-800 rounded-lg transition duration-200 focus:outline-none focus:ring-4 focus:ring-secondary-dark/50">
+                        <span id="trendsButtonText">Dapatkan Ide Tren Global Saat Ini</span>
+                        <div id="trendsLoadingSpinner" class="loading-spinner hidden ml-2"></div>
+                    </button>
+                    <div id="trendsOutputContainer" class="mt-4 hidden bg-gray-50 p-3 rounded-lg border border-gray-200 text-sm">
+                        <p class="font-semibold mb-2 text-primary-blue">Tren Terbaru (Salin & Tempel salah satunya ke kolom Topik Utama):</p>
+                        <div id="trendsOutput" class="space-y-1"></div>
+                    </div>
+                </div>
+                <!-- END NEW TRENDING CONTENT SECTION -->
+
+
+                <button id="generateBtn" onclick="generateStrategy()" class="w-full flex items-center justify-center p-3 text-white font-bold bg-accent-green hover:bg-green-700 rounded-lg transition duration-200 focus:outline-none focus:ring-4 focus:ring-accent-green/50">
+                    <span id="buttonText">Dapatkan Strategi Konten</span>
+                    <div id="loadingSpinner" class="loading-spinner hidden ml-2"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Output Section -->
+        <div id="resultsContainer" class="hidden bg-white card p-6 md:p-8 rounded-xl">
+            <h2 class="text-2xl font-semibold text-primary-blue mb-4 border-b pb-2">1. Hasil Strategi AI</h2>
+            <div id="strategyOutput" class="text-gray-800 leading-relaxed space-y-4">
+                <!-- Hasil konten akan disuntikkan di sini -->
+            </div>
+            
+            <!-- NEW SCRIPT GENERATION SECTION -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h3 class="text-xl font-semibold text-accent-green mb-3">2. Kembangkan Konten Video Langsung (Scripting)</h3>
+                <p class="text-sm text-gray-600 mb-4">Salin salah satu ide dari atas, atau masukkan ide kustom Anda, untuk dibuatkan draf *script* video lengkap.</p>
+                
+                <div>
+                    <label for="scriptIdeaInput" class="block text-sm font-medium text-gray-700 mb-1">Ide Konten untuk Dijadikan Script</label>
+                    <textarea id="scriptIdeaInput" rows="2" placeholder="Salin-tempel salah satu ide konten (misalnya: '3 Tips Rahasia Menabung Cepat')" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-accent-green focus:border-accent-green transition duration-150"></textarea>
+                </div>
+                
+                <button id="generateScriptBtn" onclick="generateScriptOutline()" class="mt-3 w-full flex items-center justify-center p-3 text-white font-bold bg-primary-blue hover:bg-blue-700 rounded-lg transition duration-200 focus:outline-none focus:ring-4 focus:ring-primary-blue/50">
+                    <span id="scriptButtonText">Buatkan Draf Script Video</span>
+                    <div id="scriptLoadingSpinner" class="loading-spinner hidden ml-2"></div>
+                </button>
+            </div>
+
+            <!-- SCRIPT OUTPUT -->
+            <div id="scriptOutputContainer" class="mt-6 hidden bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 class="text-lg font-bold text-secondary-dark mb-2">Draf Script Lengkap:</h4>
+                <div id="scriptOutput" class="text-sm text-gray-700"></div>
+                <button onclick="saveContent('script')" class="mt-4 px-4 py-2 bg-accent-green text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition duration-200 disabled:opacity-50" id="saveScriptBtn">Simpan Script ke Pustaka</button>
+            </div>
+
+            <!-- NEW HEADLINE & HASHTAG GENERATION SECTION -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h3 class="text-xl font-semibold text-orange-500 mb-3">3. Optimasi Judul dan Tagar Viral</h3>
+                <p class="text-sm text-gray-600 mb-4">Salin ide atau ringkasan script Anda untuk mendapatkan 5 Judul Viral dan set Tagar yang Tepat.</p>
+                
+                <div>
+                    <label for="captionInput" class="block text-sm font-medium text-gray-700 mb-1">Ringkasan Script Video / Ide Utama</label>
+                    <textarea id="captionInput" rows="2" placeholder="Salin ringkasan singkat dari script Anda di sini (misalnya: 'Video ini membahas 3 trik sederhana agar tabungan cepat bertambah')" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-orange-500 focus:border-orange-500 transition duration-150"></textarea>
+                </div>
+                
+                <button id="generateCaptionBtn" onclick="generateCaptionAndHashtags()" class="mt-3 w-full flex items-center justify-center p-3 text-white font-bold bg-orange-500 hover:bg-orange-600 rounded-lg transition duration-200 focus:outline-none focus:ring-4 focus:ring-orange-500/50">
+                    <span id="captionButtonText">Buatkan Judul & Tagar Viral</span>
+                    <div id="hashtagLoadingSpinner" class="loading-spinner hidden ml-2"></div>
+                </button>
+            </div>
+
+            <!-- CAPTION/HASHTAG OUTPUT -->
+            <div id="captionOutputContainer" class="mt-6 hidden bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 class="text-lg font-bold text-secondary-dark mb-2">Hasil Optimasi:</h4>
+                <div id="captionOutput" class="text-sm text-gray-700"></div>
+                <button onclick="saveContent('caption')" class="mt-4 px-4 py-2 bg-accent-green text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition duration-200 disabled:opacity-50" id="saveCaptionBtn">Simpan Judul/Tagar ke Pustaka</button>
+            </div>
+
+
+            <!-- Sumber informasi dari Google Search -->
+            <div id="sourcesContainer" class="mt-6 border-t pt-4 text-sm text-gray-500 hidden">
+                <p class="font-semibold mb-1">Sumber (Ditemukan oleh Google Search untuk tren):</p>
+                <ul id="sourcesList" class="list-disc list-inside space-y-1 pl-4"></ul>
+            </div>
+
+            <!-- CONTENT LIBRARY SECTION (NEW FEATURE) -->
+            <div id="librarySection" class="mt-8 pt-6 border-t border-gray-200 hidden">
+                <h3 class="text-xl font-semibold text-primary-blue mb-3 flex justify-between items-center">
+                    4. Pustaka Konten Anda
+                    <span id="userIdDisplay" class="text-xs font-normal bg-blue-100 text-primary-blue px-2 py-1 rounded-full">Memuat ID...</span>
+                </h3>
+                <p class="text-sm text-gray-600 mb-4">Semua script dan optimasi yang Anda simpan akan muncul di sini. Data tersimpan secara privat.</p>
+                <div id="contentLibraryList" class="space-y-3">
+                    <p id="libraryStatus" class="text-gray-500">Memuat konten yang tersimpan...</p>
+                </div>
+            </div>
+            <!-- END CONTENT LIBRARY SECTION -->
+        </div>
+
+        <div id="errorContainer" class="hidden mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg" role="alert">
+            <p class="font-bold">Error:</p>
+            <p id="errorMessage"></p>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, addDoc, onSnapshot, collection, query, serverTimestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Firebase Variables
+        let app, db, auth;
+        let userId = null;
+        let contentCollectionRef = null;
+        
+        // Use global variables provided by the Canvas environment
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        // Gemini API Configuration
+        const apiKey = ""; 
+        const modelName = "gemini-2.5-flash-preview-09-2025";
+        
+        // DOM Elements
+        const generateBtn = document.getElementById('generateBtn');
+        const buttonText = document.getElementById('buttonText');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const strategyOutput = document.getElementById('strategyOutput');
+        const sourcesContainer = document.getElementById('sourcesContainer');
+        const sourcesList = document.getElementById('sourcesList');
+        const errorContainer = document.getElementById('errorContainer');
+        const errorMessage = document.getElementById('errorMessage');
+
+        // Scripting Elements
+        const scriptIdeaInput = document.getElementById('scriptIdeaInput');
+        const generateScriptBtn = document.getElementById('generateScriptBtn');
+        const scriptButtonText = document.getElementById('scriptButtonText');
+        const scriptLoadingSpinner = document.getElementById('scriptLoadingSpinner');
+        const scriptOutputContainer = document.getElementById('scriptOutputContainer');
+        const scriptOutput = document.getElementById('scriptOutput');
+        const saveScriptBtn = document.getElementById('saveScriptBtn'); // New
+
+        // Caption/Hashtag Elements
+        const captionInput = document.getElementById('captionInput');
+        const generateCaptionBtn = document.getElementById('generateCaptionBtn');
+        const captionButtonText = document.getElementById('captionButtonText');
+        const hashtagLoadingSpinner = document.getElementById('hashtagLoadingSpinner');
+        const captionOutputContainer = document.getElementById('captionOutputContainer');
+        const captionOutput = document.getElementById('captionOutput');
+        const saveCaptionBtn = document.getElementById('saveCaptionBtn'); // New
+
+        // Trends Elements
+        const getTrendsBtn = document.getElementById('getTrendsBtn');
+        const trendsButtonText = document.getElementById('trendsButtonText');
+        const trendsLoadingSpinner = document.getElementById('trendsLoadingSpinner');
+        const trendsOutputContainer = document.getElementById('trendsOutputContainer');
+        const trendsOutput = document.getElementById('trendsOutput');
+
+        // Library Elements
+        const librarySection = document.getElementById('librarySection');
+        const userIdDisplay = document.getElementById('userIdDisplay');
+        const contentLibraryList = document.getElementById('contentLibraryList');
+        const libraryStatus = document.getElementById('libraryStatus');
+
+
+        /**
+         * Menginisialisasi Firebase dan Autentikasi.
+         */
+        function initializeFirebase() {
+            if (firebaseConfig) {
+                try {
+                    app = initializeApp(firebaseConfig);
+                    db = getFirestore(app);
+                    auth = getAuth(app);
+                    
+                    // Listener perubahan status autentikasi
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            userId = user.uid;
+                            // Path data private: /artifacts/{appId}/users/{userId}/content_library
+                            const collectionPath = `artifacts/${appId}/users/${userId}/content_library`;
+                            contentCollectionRef = collection(db, collectionPath);
+                            console.log(`Firebase authenticated. User ID: ${userId}.`);
+                            userIdDisplay.textContent = `ID Pengguna: ${userId.substring(0, 8)}...`;
+                            librarySection.classList.remove('hidden');
+                            loadContentLibrary();
+                        } else {
+                            userId = null;
+                            console.log("No user signed in.");
+                            userIdDisplay.textContent = `Gagal Auth. (Storage non-aktif)`;
+                            libraryStatus.textContent = "Gagal memuat. Pastikan koneksi internet stabil.";
+                        }
+                    });
+
+                    // Coba sign in dengan Custom Token atau Anonymous
+                    if (initialAuthToken) {
+                        signInWithCustomToken(auth, initialAuthToken).catch(e => {
+                            console.error("Custom token sign-in failed:", e);
+                            signInAnonymously(auth).catch(e => console.error("Anonymous sign-in failed:", e));
+                        });
+                    } else {
+                        signInAnonymously(auth).catch(e => console.error("Anonymous sign-in failed:", e));
+                    }
+
+                } catch (e) {
+                    console.error("Firebase initialization failed:", e);
+                }
+            } else {
+                console.warn("Firebase configuration not available. Storage feature disabled.");
+            }
+        }
+        
+        /**
+         * Memuat pustaka konten dari Firestore secara real-time.
+         */
+        function loadContentLibrary() {
+            if (!contentCollectionRef) {
+                libraryStatus.textContent = "Gagal memuat pustaka. Autentikasi belum selesai.";
+                return;
+            }
+
+            // Gunakan onSnapshot untuk mendengarkan perubahan real-time
+            onSnapshot(query(contentCollectionRef), (snapshot) => {
+                const contentItems = [];
+                snapshot.forEach((doc) => {
+                    contentItems.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Urutkan berdasarkan waktu pembuatan terbaru
+                contentItems.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+                renderContentLibrary(contentItems);
+            }, (error) => {
+                console.error("Error loading content library:", error);
+                libraryStatus.textContent = "Error saat memuat pustaka konten.";
+            });
+        }
+
+        /**
+         * Merender daftar konten yang tersimpan ke UI.
+         * @param {Array} items
+         */
+        function renderContentLibrary(items) {
+            contentLibraryList.innerHTML = '';
+            if (items.length === 0) {
+                libraryStatus.textContent = "Belum ada konten yang disimpan. Mulai buat konten!";
+                contentLibraryList.appendChild(libraryStatus);
+                return;
+            }
+            
+            items.forEach(item => {
+                const date = item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'Tanggal Tidak Diketahui';
+                const div = document.createElement('div');
+                div.className = 'saved-item bg-white p-3 rounded-lg border border-blue-200 shadow-sm flex justify-between items-center';
+                div.innerHTML = `
+                    <div>
+                        <p class="font-bold text-sm text-secondary-dark">${item.type === 'script' ? 'SCRIPT' : 'OPTIMASI'} - ${item.idea.substring(0, 60)}${item.idea.length > 60 ? '...' : ''}</p>
+                        <p class="text-xs text-gray-500">${date} - Platform: ${item.platform}</p>
+                    </div>
+                    <button class="text-red-500 hover:text-red-700 p-1" onclick="deleteContent('${item.id}', event)">
+                        <!-- Simple Trash Icon (SVG) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                `;
+                // Menambahkan fungsi klik untuk menampilkan detail (bisa dikembangkan lebih lanjut)
+                div.onclick = () => showSavedContentDetails(item);
+                contentLibraryList.appendChild(div);
+            });
+            libraryStatus.remove();
+        }
+
+        /**
+         * Menghapus item konten dari Firestore.
+         * @param {string} docId - ID dokumen Firestore.
+         * @param {Event} event - Event click.
+         */
+        window.deleteContent = async function(docId, event) {
+            event.stopPropagation(); // Mencegah event showDetails terpicu
+            if (!contentCollectionRef) return;
+            try {
+                // Perlu konfirmasi pengguna (menggunakan modal kustom jika ini adalah lingkungan Canvas)
+                if (confirm('Yakin ingin menghapus konten ini?')) { // Menggunakan confirm() sementara
+                    await deleteDoc(doc(db, contentCollectionRef.path, docId));
+                    console.log("Document successfully deleted!");
+                }
+            } catch (error) {
+                console.error("Error removing document: ", error);
+            }
+        }
+
+        /**
+         * Menampilkan detail konten yang tersimpan.
+         * @param {Object} item - Objek konten yang tersimpan.
+         */
+        function showSavedContentDetails(item) {
+            // Kita gunakan area output Script/Caption untuk menampilkan detail
+            const outputArea = item.type === 'script' ? scriptOutputContainer : captionOutputContainer;
+            const outputDiv = item.type === 'script' ? scriptOutput : captionOutput;
+            
+            let htmlContent = `
+                <h4 class="text-lg font-bold text-secondary-dark mb-2">${item.type === 'script' ? 'Draf Script Tersimpan' : 'Hasil Optimasi Tersimpan'}</h4>
+                <p class="text-xs text-gray-500 mb-4">Disimpan pada: ${new Date(item.createdAt.seconds * 1000).toLocaleString('id-ID')}</p>
+                <p class="font-semibold mb-2">Ide Utama:</p>
+                <p class="mb-4">${item.idea}</p>
+                <p class="font-semibold mb-2">Hasil Lengkap (Markdown):</p>
+                <div class="bg-white p-3 border rounded-lg">${formatMarkdownToHtml(item.result)}</div>
+            `;
+            
+            outputDiv.innerHTML = htmlContent;
+            outputArea.classList.remove('hidden');
+        }
+
+
+        /**
+         * Menyimpan hasil AI ke Firestore.
+         * @param {'script'|'caption'} type - Tipe konten yang disimpan.
+         */
+        window.saveContent = async function(type) {
+            if (!contentCollectionRef || !userId) {
+                alert("Penyimpanan tidak tersedia. Pastikan Anda sudah terautentikasi.");
+                return;
+            }
+
+            const idea = type === 'script' ? scriptIdeaInput.value : captionInput.value;
+            const result = type === 'script' ? scriptOutput.innerText : captionOutput.innerText;
+            const platform = document.getElementById('platformSelect').value;
+
+            if (!result || !idea) {
+                alert("Tidak ada konten atau ide yang dihasilkan untuk disimpan.");
+                return;
+            }
+
+            try {
+                await addDoc(contentCollectionRef, {
+                    userId: userId,
+                    type: type,
+                    platform: platform,
+                    idea: idea,
+                    result: result,
+                    createdAt: serverTimestamp()
+                });
+                alert(`Konten ${type} berhasil disimpan ke Pustaka Konten!`);
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                alert("Gagal menyimpan konten. Lihat console untuk detail.");
+            }
+        }
+
+        // Panggil inisialisasi Firebase saat dokumen selesai dimuat
+        document.addEventListener('DOMContentLoaded', initializeFirebase);
+
+
+        // --- FUNGSI GENERASI KONTEN (TIDAK BERUBAH SECARA ESENSIAL) ---
+
+        /**
+         * Mengaktifkan/menonaktifkan status loading UI untuk Strategi Utama
+         */
+        function setLoading(isLoading) {
+            generateBtn.disabled = isLoading;
+            // ... (rest of setLoading function logic)
+             if (isLoading) {
+                buttonText.textContent = 'Menganalisis Tren...';
+                loadingSpinner.classList.remove('hidden');
+                errorContainer.classList.add('hidden');
+            } else {
+                buttonText.textContent = 'Dapatkan Strategi Konten';
+                loadingSpinner.classList.add('hidden');
+            }
+        }
+        
+        /**
+         * Mengaktifkan/menonaktifkan status loading UI untuk Generator Script
+         */
+        function setScriptLoading(isLoading) {
+            generateScriptBtn.disabled = isLoading;
+            // ... (rest of setScriptLoading function logic)
+             if (isLoading) {
+                scriptButtonText.textContent = 'Membuat Script Video...';
+                scriptLoadingSpinner.classList.remove('hidden');
+                scriptOutputContainer.classList.add('hidden');
+                errorContainer.classList.add('hidden');
+            } else {
+                scriptButtonText.textContent = 'Buatkan Draf Script Video';
+                scriptLoadingSpinner.classList.add('hidden');
+            }
+        }
+
+        /**
+         * Mengaktifkan/menonaktifkan status loading UI untuk Generator Judul & Tagar
+         */
+        function setCaptionLoading(isLoading) {
+            generateCaptionBtn.disabled = isLoading;
+            // ... (rest of setCaptionLoading function logic)
+             if (isLoading) {
+                captionButtonText.textContent = 'Mengoptimasi Judul & Tagar...';
+                hashtagLoadingSpinner.classList.remove('hidden');
+                captionOutputContainer.classList.add('hidden');
+                errorContainer.classList.add('hidden');
+            } else {
+                captionButtonText.textContent = 'Buatkan Judul & Tagar Viral';
+                hashtagLoadingSpinner.classList.add('hidden');
+            }
+        }
+        
+        /**
+         * Mengaktifkan/menonaktifkan status loading UI untuk General Trends
+         */
+        function setTrendsLoading(isLoading) {
+            getTrendsBtn.disabled = isLoading;
+            // ... (rest of setTrendsLoading function logic)
+             if (isLoading) {
+                trendsButtonText.textContent = 'Mencari Tren Global...';
+                trendsLoadingSpinner.classList.remove('hidden');
+                trendsOutputContainer.classList.add('hidden');
+                errorContainer.classList.add('hidden');
+            } else {
+                trendsButtonText.textContent = 'Dapatkan Ide Tren Global Saat Ini';
+                trendsLoadingSpinner.classList.add('hidden');
+            }
+        }
+
+
+        /**
+         * Fungsi utama untuk menghasilkan strategi konten menggunakan Gemini API dengan Google Search grounding.
+         */
+        window.generateStrategy = async function() {
+            setLoading(true);
+
+            const topic = document.getElementById('topicInput').value.trim();
+            const platform = document.getElementById('platformSelect').value;
+
+            if (!topic) {
+                errorContainer.classList.remove('hidden');
+                errorMessage.textContent = 'Mohon masukkan topik utama akun Anda untuk melanjutkan.';
+                setLoading(false);
+                return;
+            }
+
+            const userQuery = `Sebagai pakar strategi media sosial, berikan 5 (lima) ide konten video yang sedang tren, menarik, dan berpotensi viral, serta jadwal posting optimal (termasuk hari dan jam terbaik) untuk platform ${platform} mengenai topik: "${topic}". Berikan respons Anda dalam format Markdown.`;
+            
+            const systemPrompt = "Anda adalah Analis Pertumbuhan Media Sosial dan Spesialis Konten. Tugas Anda adalah memberikan saran strategis, etis, dan berbasis data (menggunakan real-time web search) untuk meningkatkan jangkauan organik. Respons harus fokus pada kualitas konten dan waktu posting.";
+
+            await fetchAndDisplayContent(userQuery, systemPrompt, strategyOutput, false, setLoading);
+            resultsContainer.classList.remove('hidden');
+        }
+
+        /**
+         * Fungsi untuk mendapatkan daftar tren umum global dan lokal.
+         */
+        window.getGeneralTrends = async function() {
+            setTrendsLoading(true);
+
+            const userQuery = `Buatkan daftar 10 topik yang paling banyak dibicarakan, sedang tren, dan viral secara global dan di Indonesia hari ini, yang cocok dijadikan ide konten media sosial. Berikan daftar ini dalam format Markdown.`;
+            
+            const systemPrompt = "Anda adalah Analis Tren Data Real-time. Tugas Anda adalah menyajikan topik-topik terpanas yang sedang dicari dan dibicarakan di internet.";
+            
+            await fetchAndDisplayContent(userQuery, systemPrompt, trendsOutput, false, setTrendsLoading);
+
+            if (!errorContainer.classList.contains('hidden')) {
+                trendsOutputContainer.classList.add('hidden');
+            } else {
+                trendsOutputContainer.classList.remove('hidden');
+            }
+        }
+
+
+        /**
+         * Fungsi untuk menghasilkan draf script video berdasarkan ide yang dimasukkan.
+         */
+        window.generateScriptOutline = async function() {
+            setScriptLoading(true);
+
+            const idea = scriptIdeaInput.value.trim();
+            const platform = document.getElementById('platformSelect').value;
+            const topic = document.getElementById('topicInput').value.trim();
+
+
+            if (!idea) {
+                errorContainer.classList.remove('hidden');
+                errorMessage.textContent = 'Mohon masukkan ide konten yang akan dibuatkan script.';
+                setScriptLoading(false);
+                return;
+            }
+
+            const userQuery = `Buatkan draf script video pendek (sekitar 30-60 detik) yang lengkap untuk platform ${platform} dengan topik utama "${topic}" berdasarkan ide konten ini: "${idea}". Script harus mencakup: HOOK (kalimat pembuka kuat), VISUAL (deskripsi adegan/gambar), AUDIO (musik/efek), NARASI (teks yang diucapkan), dan CTA (Call-to-Action). Berikan respons dalam format Markdown.`;
+            
+            const systemPrompt = "Anda adalah Penulis Script Video Viral. Tugas Anda adalah menghasilkan draf script video pendek yang detail, menarik, dan sesuai dengan tren media sosial terbaru.";
+            
+            await fetchAndDisplayContent(userQuery, systemPrompt, scriptOutput, true, setScriptLoading);
+            scriptOutputContainer.classList.remove('hidden');
+        }
+
+        /**
+         * Fungsi untuk menghasilkan judul (caption) dan tagar viral.
+         */
+        window.generateCaptionAndHashtags = async function() {
+            setCaptionLoading(true);
+
+            const captionText = captionInput.value.trim();
+            const platform = document.getElementById('platformSelect').value;
+
+            if (!captionText) {
+                errorContainer.classList.remove('hidden');
+                errorMessage.textContent = 'Mohon masukkan ringkasan script atau ide utama untuk dibuatkan judul dan tagar.';
+                setCaptionLoading(false);
+                return;
+            }
+
+            const userQuery = `Berdasarkan ide konten ini: "${captionText}", buatkan 5 (lima) opsi judul/caption yang sangat menarik (Clickbait/Viral Hook) dan 1 (satu) set lengkap tagar (hashtags) yang terbagi menjadi kategori: 3 Tagar Populer, 3 Tagar Niche, dan 3 Tagar Spesifik untuk platform ${platform}. Berikan respons dalam format Markdown yang terstruktur.`;
+            
+            const systemPrompt = "Anda adalah Pakar SEO dan Viralitas Konten Media Sosial. Tugas Anda adalah mengoptimalkan judul dan tagar untuk mencapai jangkauan dan interaksi maksimum.";
+            
+            await fetchAndDisplayContent(userQuery, systemPrompt, captionOutput, true, setCaptionLoading);
+            captionOutputContainer.classList.remove('hidden');
+        }
+
+
+        /**
+         * Fungsi utilitas untuk melakukan fetch API ke Gemini dengan retry.
+         */
+        async function fetchAndDisplayContent(userQuery, systemPrompt, outputElement, isScriptOrCaption, setLoadingFunction) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                tools: isScriptOrCaption ? [] : [{ "google_search": {} }], 
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            const maxRetries = 5;
+            let delay = 1000;
+            let response;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        break; 
+                    } else if (response.status === 429 || response.status >= 500) {
+                        if (i < maxRetries - 1) {
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            delay *= 2; 
+                        } else {
+                            throw new Error(`Gagal setelah ${maxRetries} percobaan. Status: ${response.status}`);
+                        }
+                    } else {
+                        throw new Error(`Permintaan API gagal. Status: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error("Fetch attempt failed:", error);
+                    if (i === maxRetries - 1) {
+                        errorContainer.classList.remove('hidden');
+                        errorMessage.textContent = `Gagal mendapatkan hasil. Coba lagi. Detail: ${error.message}`;
+                        setLoadingFunction(false);
+                        return;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+
+
+            try {
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const text = candidate.content.parts[0].text;
+                    
+                    outputElement.innerHTML = formatMarkdownToHtml(text);
+
+                    // Perbarui sumber jika ini adalah Strategi utama ATAU Trends
+                    if (!isScriptOrCaption) {
+                        let sources = [];
+                        const groundingMetadata = candidate.groundingMetadata;
+                        if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                            sources = groundingMetadata.groundingAttributions
+                                .map(attribution => ({
+                                    uri: attribution.web?.uri,
+                                    title: attribution.web?.title,
+                                }))
+                                .filter(source => source.uri && source.title);
+                        }
+                        
+                        if (outputElement === strategyOutput) {
+                            sourcesList.innerHTML = '';
+                            if (sources.length > 0) {
+                                sources.forEach(source => {
+                                    const li = document.createElement('li');
+                                    li.innerHTML = `<a href="${source.uri}" target="_blank" class="text-primary-blue hover:underline">${source.title}</a>`;
+                                    sourcesList.appendChild(li);
+                                });
+                                sourcesContainer.classList.remove('hidden');
+                            } else {
+                                sourcesContainer.classList.add('hidden');
+                            }
+                        }
+                    }
+                    
+                } else {
+                    throw new Error("Respons AI tidak mengandung teks atau struktur tidak terduga.");
+                }
+            } catch (error) {
+                console.error("Error processing response:", error);
+                errorContainer.classList.remove('hidden');
+                errorMessage.textContent = `Gagal memproses hasil: ${error.message}`;
+            } finally {
+                setLoadingFunction(false);
+            }
+        }
+
+
+        /**
+         * Fungsi dasar untuk mengkonversi Markdown sederhana ke HTML (hanya untuk tampilan)
+         * @param {string} markdownText
+         */
+        function formatMarkdownToHtml(markdownText) {
+            let html = markdownText;
+            
+            // Header
+            html = html.replace(/^### (.*$)/gim, '<h3 class="text-xl font-semibold mt-4 mb-2">$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2 class="text-2xl font-bold mt-6 mb-3">$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1 class="text-3xl font-extrabold mt-8 mb-4">$1</h1>');
+            
+            // Lists (ul)
+            // Mendukung bullet points dan numbering
+            html = html.replace(/^\* (.*$)/gim, '<li class="ml-4 list-disc text-gray-700">$1</li>');
+            html = html.replace(/^\d+\. (.*$)/gim, '<li class="ml-4 list-decimal text-gray-700">$1</li>');
+
+            // Wrap list items if they are close together
+            const listItems = html.match(/<li.*?<\/li>/g) || [];
+            if (listItems.length > 0) {
+                const listHtml = listItems.join('');
+                html = html.replace(listItems.join('|'), '<ul>' + listHtml + '</ul>');
+                html = html.replace(/<li.*?<\/li>/, (match) => '</ul>' + match + '<ul>');
+                html = html.replace(/<\/ul><ul>/g, ''); 
+                if (html.startsWith('<ul>')) html = html.substring(4);
+                if (html.endsWith('</ul>')) html = html.substring(0, html.length - 5);
+                html = '<div>' + html + '</div>'; 
+            }
+
+            // Bold
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Paragraphs - wrap remaining non-header/non-list lines
+            html = html.split('\n\n').map(p => {
+                const cleanedP = p.trim();
+                if (!cleanedP || cleanedP.startsWith('<h') || cleanedP.startsWith('<li') || cleanedP.startsWith('<ul') || cleanedP.startsWith('<ul>')) {
+                    return p;
+                }
+                return `<p class="mb-3 text-gray-700">${p}</p>`;
+            }).join('');
+            
+            // Final cleanup of the wrapper
+            html = html.replace(/^<div>(.*)<\/div>$/s, '$1');
+
+            return html;
+        }
+
+    </script>
+</body>
+</html>
